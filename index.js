@@ -29,6 +29,15 @@ class Sudoku {
         this.operations = []
         if (matrix) this.setMatrix(matrix)
     }
+
+    get matrix() {
+        return this.matrix
+    }
+
+    get stateMatrix() {
+        return this.stateMatrix
+    }
+
     getRandBetween(l, r) {
         return Math.floor(Math.random() * (r - l + 1)) + l
     }
@@ -66,15 +75,8 @@ class Sudoku {
         }
     }
 
-    get matrix() {
-        return this.matrix
-    }
-
-    get stateMatrix() {
-        return this.stateMatrix
-    }
-
     getCellState(row, col) {
+        if (this.stateMatrix.length === 0) return null
         return this.stateMatrix[row - 1][col - 1]
     }
 
@@ -391,6 +393,22 @@ function setTable(table, sudoku, fillblank = false) {
     }
 }
 
+function checkTable(table, sudoku) {
+    for (let row = 1; row <= 9; row++) {
+        for (let col = 1; col <= 9; col++) {
+            const node = getNode(table, row, col)
+            const { isStatic, value, input } = sudoku.getCellState(row, col)
+            if (
+                node.value &&
+                !isStatic &&
+                String(node.value) !== String(value)
+            ) {
+                node.style.border = '2px solid red'
+            }
+        }
+    }
+}
+
 // clear formatting of the table cells
 function clearFormatting(table) {
     for (let row = 1; row <= 9; row++) {
@@ -424,28 +442,29 @@ addInputListenerToTableCells(table1, (event) => {
 
 // assigning buttons to sudoku
 const controls = {
-    clearBtn: document.querySelector('.sudoku .controls__clear'),
-    randomBtn: document.querySelector('.sudoku .controls__random'),
-    fillBtn: document.querySelector('.sudoku .controls__fill'),
-    hintBtn: document.querySelector('button.controls__hint'),
+    clear: document.querySelector('.sudoku .controls__clear'),
+    random: document.querySelector('.sudoku .controls__random'),
+    fill: document.querySelector('.sudoku .controls__fill'),
+    hint: document.querySelector('.sudoku .controls__hint'),
+    check: document.querySelector('.sudoku .controls__check'),
 }
 
-controls.clearBtn.addEventListener('click', (event) => {
+controls.clear.addEventListener('click', (event) => {
     setTable(table1, sudoku1)
     clearFormatting(table1)
 })
 
-controls.randomBtn.addEventListener('click', (event) => {
+controls.random.addEventListener('click', (event) => {
     sudoku1.createRandom()
     clearFormatting(table1)
     setTable(table1, sudoku1)
 })
 
-controls.fillBtn.addEventListener('click', (event) => {
+controls.fill.addEventListener('click', (event) => {
     setTable(table1, sudoku1, true)
 })
 
-controls.hintBtn.addEventListener('click', (event) => {
+controls.hint.addEventListener('click', (event) => {
     clearFormatting(table1)
     let arr = sudoku1.getUniqueCells()
     console.log('unique====>', arr)
@@ -458,4 +477,9 @@ controls.hintBtn.addEventListener('click', (event) => {
     globalThis.__hintTimer__ = setTimeout(() => {
         clearFormatting(table1)
     }, 5000)
+})
+
+controls.check.addEventListener('click', () => {
+    clearFormatting(table1)
+    checkTable(table1, sudoku1)
 })
