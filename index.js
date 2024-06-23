@@ -435,7 +435,7 @@ sudoku1.createRandom()
 setTable(table1, sudoku1)
 addInputListenerToTableCells(table1, (event) => {
     let value = event.data.trim()
-    let isValid = value.match(/^\d$/) ? true : false
+    let isValid = value.match(/^[1-9]$/) ? true : false
     if (!isValid) event.target.value = ''
     else event.target.value = value
 })
