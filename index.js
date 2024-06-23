@@ -20,6 +20,7 @@ class Sudoku {
     cols = []
     boxes = []
     operations = []
+    stateMatrix = []
     constructor(matrix) {
         this.matrix = Array.from(Array(9), (el) => new Array(9).fill(''))
         this.rows = Array.from(Array(9), (el) => new Array())
@@ -52,8 +53,33 @@ class Sudoku {
         }
     }
 
+    setStateMatrix(BASE_MATRIX, CURR_MATRIX) {
+        this.stateMatrix = Array.from(Array(9), (el) => new Array(9).fill({}))
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                this.stateMatrix[i][j] = {
+                    value: BASE_MATRIX[i][j],
+                    isStatic: CURR_MATRIX[i][j] ? true : false,
+                    input: '',
+                }
+            }
+        }
+    }
+
     get matrix() {
         return this.matrix
+    }
+
+    get stateMatrix() {
+        return this.stateMatrix
+    }
+
+    getCellState(row, col) {
+        return this.stateMatrix[row - 1][col - 1]
+    }
+
+    setCellInput(row, col, input) {
+        return (this.stateMatrix[row - 1][col - 1] = input)
     }
 
     clear() {
@@ -275,9 +301,11 @@ class Sudoku {
     }
 
     createRandom() {
-        let VALID_MATRIX = this.getBaseMatrix()
+        let BASE_MATRIX = this.getBaseMatrix()
         console.log('base-matrix=============>')
-        new Sudoku(VALID_MATRIX).print()
+        new Sudoku(BASE_MATRIX).print()
+
+        let CURR_MATRIX = BASE_MATRIX.map((row) => [...row])
         // creating empty values
         while (true) {
             __LOOP_PROTECTION__()
@@ -285,14 +313,16 @@ class Sudoku {
                 this.getRandBetween(1, 9),
                 this.getRandBetween(1, 9),
             ]
-            let currVal = VALID_MATRIX[row - 1][col - 1]
-            VALID_MATRIX[row - 1][col - 1] = ''
-            if (!this.isSolvable(VALID_MATRIX)) {
-                VALID_MATRIX[row - 1][col - 1] = currVal
+            let currVal = CURR_MATRIX[row - 1][col - 1]
+            CURR_MATRIX[row - 1][col - 1] = ''
+            if (!this.isSolvable(CURR_MATRIX)) {
+                CURR_MATRIX[row - 1][col - 1] = currVal
                 break
             }
         }
-        this.setMatrix(VALID_MATRIX)
+        this.setMatrix(CURR_MATRIX)
+        this.setStateMatrix(BASE_MATRIX, CURR_MATRIX)
+        console.log('state-matrix=====>', this.stateMatrix)
     }
 
     solve() {
@@ -329,16 +359,34 @@ function getNode(table, r, c) {
 
 function setNode(node, val) {
     node.value = val
-    node.textContent = val
 }
 
 // setting html sudoku table according to sudoku instance
-function setTable(table, sudoku) {
+function setTable(table, sudoku, fillblank = false) {
     for (let row = 1; row <= 9; row++) {
         for (let col = 1; col <= 9; col++) {
             const node = getNode(table, row, col)
             const val = sudoku.getCell(row, col)
             setNode(node, val)
+            if (val) {
+                // node.style = 'text-shadow: 0 0 0 black;'
+                node.style['text-shadow'] = '0 0 0 black'
+                node.disabled = true
+            } else {
+                // node.style = 'text-shadow: 0 0 0 blue;'
+                node.style['text-shadow'] = '0 0 0 blue'
+                node.disabled = false
+            }
+            if (
+                fillblank &&
+                sudoku.stateMatrix &&
+                sudoku.stateMatrix.length > 0
+            ) {
+                let [i, j] = [row - 1, col - 1]
+                if (sudoku.getCellState(row, col).isStatic === false) {
+                    setNode(node, sudoku.stateMatrix[i][j].value)
+                }
+            }
         }
     }
 }
@@ -348,11 +396,7 @@ function clearFormatting(table) {
     for (let row = 1; row <= 9; row++) {
         for (let col = 1; col <= 9; col++) {
             const node = getNode(table, row, col)
-            node.style = `
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            text-align: center;`
+            node.style['border'] = ''
         }
     }
 }
@@ -372,12 +416,10 @@ const table1 = document.querySelector('.sudoku > table')
 sudoku1.createRandom()
 setTable(table1, sudoku1)
 addInputListenerToTableCells(table1, (event) => {
-    let parsedValue = Number(event.target.value)
-    if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue <= 9) {
-        node.textContent = event.target.value
-    } else {
-        node.value = event.target.textContent
-    }
+    let value = event.data.trim()
+    let isValid = value.match(/^\d$/) ? true : false
+    if (!isValid) event.target.value = ''
+    else event.target.value = value
 })
 
 // assigning buttons to sudoku
@@ -389,18 +431,18 @@ const controls = {
 }
 
 controls.clearBtn.addEventListener('click', (event) => {
-    sudoku1.clear()
     setTable(table1, sudoku1)
+    clearFormatting(table1)
 })
 
 controls.randomBtn.addEventListener('click', (event) => {
     sudoku1.createRandom()
+    clearFormatting(table1)
     setTable(table1, sudoku1)
 })
 
 controls.fillBtn.addEventListener('click', (event) => {
-    sudoku1.solve()
-    setTable(table1, sudoku1)
+    setTable(table1, sudoku1, true)
 })
 
 controls.hintBtn.addEventListener('click', (event) => {
@@ -410,6 +452,10 @@ controls.hintBtn.addEventListener('click', (event) => {
     for (let unique of arr) {
         let val = unique.val
         let node = getNode(table1, unique.row, unique.col)
-        node.style['border'] = '3px solid green'
+        node.style['border'] = '2px solid green'
     }
+    if (globalThis.__hintTimer__) clearTimeout(globalThis.__hintTimer__)
+    globalThis.__hintTimer__ = setTimeout(() => {
+        clearFormatting(table1)
+    }, 5000)
 })
