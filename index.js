@@ -27,6 +27,7 @@ class Sudoku {
         this.cols = Array.from(Array(9), (el) => new Array())
         this.boxes = Array.from(Array(9), (el) => new Array())
         this.operations = []
+        this.stateMatrix = Array.from(Array(9), (el) => new Array(9).fill({}))
         if (matrix) this.setMatrix(matrix)
     }
 
@@ -89,6 +90,7 @@ class Sudoku {
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
                 this.matrix[i][j] = ''
+                this.stateMatrix[i][j] = {}
             }
         }
         // clearing row/col/box data
@@ -424,7 +426,7 @@ function addInputListenerToTableCells(table, callbackFn) {
     for (let row = 1; row <= 9; row++) {
         for (let col = 1; col <= 9; col++) {
             const node = getNode(table1, row, col)
-            node.addEventListener('input', callbackFn)
+            node.addEventListener('input', callbackFn.bind(this, row, col))
         }
     }
 }
@@ -433,11 +435,14 @@ const sudoku1 = new Sudoku()
 const table1 = document.querySelector('.sudoku > table')
 sudoku1.createRandom()
 setTable(table1, sudoku1)
-addInputListenerToTableCells(table1, (event) => {
+addInputListenerToTableCells(table1, (row, col, event) => {
     let value = event.data.trim()
     let isValid = value.match(/^[1-9]$/) ? true : false
     if (!isValid) event.target.value = ''
-    else event.target.value = value
+    else {
+        event.target.value = value
+        sudoku1.setCellInput(row, col, value)
+    }
 })
 
 // assigning buttons to sudoku
@@ -447,6 +452,11 @@ const controls = {
     fill: document.querySelector('.sudoku .controls__fill'),
     hint: document.querySelector('.sudoku .controls__hint'),
     check: document.querySelector('.sudoku .controls__check'),
+}
+
+const additionalControls = {
+    custom: document.querySelector('.sudoku .controls__custom'),
+    lockUnlock: document.querySelector('.sudoku .controls__lockUnlock'),
 }
 
 controls.clear.addEventListener('click', (event) => {
@@ -483,3 +493,10 @@ controls.check.addEventListener('click', () => {
     clearFormatting(table1)
     checkTable(table1, sudoku1)
 })
+
+additionalControls.custom.addEventListener('click', () => {
+    sudoku1.clear()
+    setTable(table1, sudoku1)
+})
+
+additionalControls.lockUnlock.addEventListener('click', () => {})
