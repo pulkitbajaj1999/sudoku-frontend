@@ -500,3 +500,38 @@ additionalControls.custom.addEventListener('click', () => {
 })
 
 additionalControls.lockUnlock.addEventListener('click', () => {})
+
+const fileInput = document.querySelector('.upload__container input')
+const loadEl = document.getElementById('load')
+const imageEl = document.querySelector('.processed_image__container img')
+
+console.log(fileInput)
+
+fileInput.addEventListener('change', (event) => {
+    console.log('onchange=====+>', event.target.files[0])
+    const UPLOAD_ENDPOINT = 'http://localhost:8000/process/'
+    const file = fileInput.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+    // set spinner
+    loadEl.style.display = 'block'
+    imageEl.style.display = 'none'
+    fetch(UPLOAD_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('[success]: ', data)
+            const { processedImage, matrix } = data.data
+            if (processedImage)
+                imageEl.src = `data:image/jpg;base64,${processedImage}`
+        })
+        .catch((err) => {
+            console.log('[error]', err)
+        })
+        .finally(() => {
+            loadEl.style.display = 'none'
+            imageEl.style.display = 'block'
+        })
+})

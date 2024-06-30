@@ -1,6 +1,15 @@
+.root {
+    display: flex;
+    flex-direction: row;
+}
 .sudoku {
     margin: 20px;
     width: fit-content;
+}
+
+.right {
+    margin-left: 100px;
+    min-width: 600px;
 }
 
 .sudoku h1 {
@@ -41,4 +50,27 @@ tr:nth-child(3n+3) > td {
 
 .controls .additional {
     margin-top: 50px;
+}
+
+.upload__container {
+    margin-top: 50px;
+}
+
+.processed_image__container {
+    margin-top: 50px;
+}
+
+
+
+#load{
+    width:100px;
+    height: 50px;
+    background:url("./loading.gif") no-repeat;
+    background-size: contain;
+    display: none;
+}
+
+#processedImage {
+    display: none;
+    width: 500px;
 }
