@@ -82,7 +82,7 @@ class Sudoku {
     }
 
     setCellInput(row, col, input) {
-        return (this.stateMatrix[row - 1][col - 1] = input)
+        this.stateMatrix[row - 1][col - 1].input = input
     }
 
     clear() {
