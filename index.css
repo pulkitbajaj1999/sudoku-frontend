@@ -74,3 +74,35 @@ tr:nth-child(3n+3) > td {
     display: none;
     width: 500px;
 }
+
+
+.notification-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+.notification {
+    background: linear-gradient(to right, #FF9A8B, #FF6A88);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    max-width: 800px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    margin-top: 10px;
+}
+.notification.show {
+    opacity: 1;
+}
+.notification-content {
+    flex-grow: 1;
+}
+.notification-close {
+    cursor: pointer;
+    padding-left: 10px;
+}
