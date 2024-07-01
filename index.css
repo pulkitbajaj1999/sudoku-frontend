@@ -2,13 +2,26 @@
     display: flex;
     flex-direction: row;
 }
+
+
 .sudoku {
     margin: 20px;
     width: fit-content;
 }
 
-.right {
-    margin-left: 100px;
+.input__container {
+    margin-left: 20px;
+    min-width: 600px;
+}
+
+.input__container input {
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+.processed-output__container {
+    margin-top: 100px;
+    margin-left: 20px;
+    margin-right: 20px;
     min-width: 600px;
 }
 
@@ -56,10 +69,6 @@ tr:nth-child(3n+3) > td {
     margin-top: 50px;
 }
 
-.processed_image__container {
-    margin-top: 50px;
-}
-
 
 
 #load{
@@ -75,6 +84,10 @@ tr:nth-child(3n+3) > td {
     width: 500px;
 }
 
+#inputImage {
+    display: none;
+    width: 500px;
+}
 
 .notification-container {
     position: fixed;
@@ -105,4 +118,19 @@ tr:nth-child(3n+3) > td {
 .notification-close {
     cursor: pointer;
     padding-left: 10px;
+}
+
+
+
+
+@media screen and (max-width: 600px) {
+    .root {
+        flex-direction: column;
+    }
+    td > input {
+        width: auto;
+        height: auto;
+        max-height: 40px;
+        max-width: 40px;
+    }
 }

@@ -106,22 +106,33 @@ function main() {
 
     // defining image processing elments
     const fileInput = document.querySelector('.upload__container input')
-    const loadEl = document.getElementById('load')
-    const imageEl = document.querySelector('.processed_image__container img')
+    const processLoader = document.getElementById('load')
+    const processedImageEl = document.querySelector(
+        '.processed_image__container img'
+    )
+    const inputImage = document.querySelector('.input-image__container img')
 
     fileInput.addEventListener('change', (event) => {
         const UPLOAD_ENDPOINT = 'http://localhost:8000/process/'
         const file = fileInput.files[0]
 
-        // set spinner
-        loadEl.style.display = 'block'
-        imageEl.style.display = 'none'
+        // set image in input container
+        const reader = new FileReader()
+        reader.onload = (event) => {
+            inputImage.style.display = 'block'
+            inputImage.src = event.target.result
+        }
+        reader.readAsDataURL(file)
+
+        // set spinner in processed container
+        processLoader.style.display = 'block'
+        processedImageEl.style.display = 'none'
 
         uploadFile(UPLOAD_ENDPOINT, file).then((data) => {
             if (data.success) {
                 const { processedImage, matrix } = data.data
                 if (processedImage)
-                    imageEl.src = `data:image/jpg;base64,${processedImage}`
+                    processedImageEl.src = `data:image/jpg;base64,${processedImage}`
                 if (matrix) {
                     sudoku1.setStateMatrix(matrix)
                     setTable(table1, sudoku1)
@@ -131,8 +142,8 @@ function main() {
                     'error:[uploadFile]:' + JSON.stringify(data.error)
                 )
             }
-            loadEl.style.display = 'none'
-            imageEl.style.display = 'block'
+            processLoader.style.display = 'none'
+            processedImageEl.style.display = 'block'
         })
     })
 }
