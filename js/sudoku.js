@@ -22,6 +22,13 @@ class SudokuSolution {
         }
     }
 
+    getClonedMatrix() {
+        let clonedMatrix = []
+        for (let i = 0; i < 9; i++) {
+            clonedMatrix.push(...matrix[i])
+        }
+        return clonedMatrix
+    }
     setMatrix(matrix) {
         if (!matrix || !matrix.length === 9 || !matrix[0].length === 9)
             throw Error('invalid matrix passed to SudokuSolution:setMatrix')
@@ -113,6 +120,19 @@ class SudokuSolution {
         return possibleValues
     }
 
+    getOptimizedOptionItem() {
+        let optionItem = null
+        for (let row = 1; row <= 9; row++) {
+            for (let col = 1; col <= 9; col++) {
+                if (this.isEmpty(row, col)) {
+                    let options = this.getOptions(row, col)
+                    if (optionItem === null || options.length < optionItem.length) optionItem = {row, col, options, len: options.length}
+                }
+            }
+        }
+        return optionItem
+    }
+
     solve() {
         while (this.count < 81) {
             __LOOP_PROTECTION__()
@@ -137,7 +157,35 @@ class SudokuSolution {
             // break if loop executed without filling any cell
             if (isDirty === false) break
         }
-        return this.isSolved
+        if (this.isSolved) return true;
+
+        debugger
+        //else loop to backtrack
+        let optionItem = this.getOptimizedOptionItem()
+        if (!optionItem) throw Error('[solve]: getting null option item where matrix is not solved')
+        let {row, col, options} = optionItem
+        let tempSolution = null
+        let count = 0 //count of possible solutions for optionItem<option at cell[row][col]>
+        let clonedMatrix = this.getClonedMatrix()
+        for (let option of options) {
+            clonedMatrix[row-1][col-1] = option
+            let newSolution = new SudokuSolution(clonedMatrix)
+            let flag = newSolution.solve()
+            if (flag) {
+                if (!tempSolution) tempSolution = newSolution.matrix
+                count++
+            }
+            clonedMatrix[row-1][col-1] = 0
+            if (count > 1) break;
+        }
+        if (count === 1) {
+            // if only 1 solution exist for the item then this is the required solution and return the solution
+            this.setMatrix(tempSolution)
+            return true
+        }
+        else {
+            return false
+        }
     }
 
     print() {
@@ -512,7 +560,7 @@ class Sudoku {
         const SOLUTION_MATRIX = this.generateRandomSolutionMatrix()
         const EMPTY_RATIO = 0.1
         const MAX_ATTEMPTS = 100
-        let ITERATIONS = 3
+        let ITERATIONS = 7
         let partialMatrix = JSON.parse(JSON.stringify(SOLUTION_MATRIX))
 
         while (ITERATIONS--) {
