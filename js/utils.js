@@ -1,6 +1,6 @@
 // globals
 // loop protection
-window.__LOOP_OFFSET__ = 10000
+window.__LOOP_OFFSET__ = 1000000
 window.__LOOP_PROTECTION__ = function () {
     __LOOP_OFFSET__ = __LOOP_OFFSET__ - 1
     if (__LOOP_OFFSET__ === 0)

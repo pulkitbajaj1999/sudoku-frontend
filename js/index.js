@@ -10,22 +10,11 @@ import {
     closeNotification,
 } from './utils.js'
 
+import { TEST_MAT } from './mockData.js'
+
 function main() {
-    // define a sudoku table and
-    const sudoku1 = new Sudoku()
+    // main sudoku ui table component
     const table1 = document.querySelector('.sudoku > table')
-    sudoku1.createRandom()
-    setTable(table1, sudoku1)
-    addInputListenerToTableCells(table1, (row, col, event) => {
-        let currValue = event.data ? event.data : ''
-        if (currValue.match(/^[1-9]$/)) {
-            event.target.value = currValue
-            sudoku1.setFaceValue(row, col, parseInt(currValue))
-        } else {
-            event.target.value = ''
-            sudoku1.setFaceValue(row, col, 0)
-        }
-    })
 
     // assigning buttons to sudoku
     const controls = {
@@ -41,6 +30,29 @@ function main() {
         lock: document.querySelector('.sudoku .controls__lock'),
         unlock: document.querySelector('.sudoku .controls__unlock'),
     }
+
+    // defining image processing elments
+    const fileInput = document.querySelector('.upload__container input')
+    const processLoader = document.getElementById('load')
+    const processedImageEl = document.querySelector(
+        '.processed_image__container img'
+    )
+    const inputImage = document.querySelector('.input-image__container img')
+
+    const sudoku1 = new Sudoku(TEST_MAT)
+    // sudoku1.createRandom()
+    // sudoku1.solve()
+    setTable(table1, sudoku1)
+    addInputListenerToTableCells(table1, (row, col, event) => {
+        let currValue = event.data ? event.data : ''
+        if (currValue.match(/^[1-9]$/)) {
+            event.target.value = currValue
+            sudoku1.setFaceValue(row, col, parseInt(currValue))
+        } else {
+            event.target.value = ''
+            sudoku1.setFaceValue(row, col, 0)
+        }
+    })
 
     // adding event listeners to controls
     controls.clear.addEventListener('click', (event) => {
@@ -103,14 +115,6 @@ function main() {
         sudoku1.unlockAllFaceValues()
         setTable(table1, sudoku1)
     })
-
-    // defining image processing elments
-    const fileInput = document.querySelector('.upload__container input')
-    const processLoader = document.getElementById('load')
-    const processedImageEl = document.querySelector(
-        '.processed_image__container img'
-    )
-    const inputImage = document.querySelector('.input-image__container img')
 
     fileInput.addEventListener('change', (event) => {
         const UPLOAD_ENDPOINT = 'http://localhost:8000/process/'

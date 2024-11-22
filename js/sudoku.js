@@ -1,31 +1,53 @@
 // TODO: use lodash for deep cloning operations
+let solve_call = 0
+const VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 class SudokuSolution {
     matrix = []
     rows = []
     cols = []
     boxes = []
+    optionMatrix = []
     count = 0
+
     get isSolved() {
         return this.count === 81
     }
+
     constructor(matrix = null) {
         this.matrix = Array.from(Array(9), (el) => new Array(9).fill(0))
         this.rows = Array.from(Array(9), (el) => new Array())
         this.cols = Array.from(Array(9), (el) => new Array())
         this.boxes = Array.from(Array(9), (el) => new Array())
+        this.optionMatrix = Array.from(Array(9), (el) =>
+            new Array(9).fill([...VALUES])
+        )
         if (matrix && matrix.length === 9 && matrix[0].length === 9) {
             for (let i = 0; i < 9; i++) {
                 for (let j = 0; j < 9; j++) {
-                    if (matrix[i][j]) this.fillCell(i + 1, j + 1, matrix[i][j])
+                    if (matrix[i][j]) {
+                        this.fillCell(i + 1, j + 1, matrix[i][j])
+                        this.optionMatrix[i][j] = null
+                    } else
+                        this.optionMatrix[i].push(this.getOptions(i + 1, j + 1))
                 }
             }
         }
     }
 
+<<<<<<< Updated upstream
     getClonedMatrix() {
         let clonedMatrix = []
         for (let i = 0; i < 9; i++) {
             clonedMatrix.push(...matrix[i])
+=======
+    isMatrixComplete() {
+        return this.count === 81
+    }
+    getClonedMatrix() {
+        let clonedMatrix = new Array(9).fill(0)
+        for (let i = 0; i < 9; i++) {
+            clonedMatrix[i] = [...this.matrix[i]]
+>>>>>>> Stashed changes
         }
         return clonedMatrix
     }
@@ -66,6 +88,21 @@ class SudokuSolution {
         }
     }
 
+    getInterSection(...args) {
+        let res = null
+        for (let arr of args) {
+            if (!res) res = [...arr]
+            else {
+                res = res.filter((el) => arr.includes(el))
+            }
+        }
+        return res
+    }
+
+    substractOptions(arr1, arr2) {
+        return arr1.filter((el) => !arr2.includes(el))
+    }
+
     getCell(row, col) {
         return this.matrix[row - 1][col - 1]
     }
@@ -86,6 +123,7 @@ class SudokuSolution {
         this.rows[i].push(value)
         this.cols[j].push(value)
         this.boxes[b].push(value)
+        this.optionMatrix[i][j] = null
         this.count += 1
     }
 
@@ -126,13 +164,22 @@ class SudokuSolution {
             for (let col = 1; col <= 9; col++) {
                 if (this.isEmpty(row, col)) {
                     let options = this.getOptions(row, col)
+<<<<<<< Updated upstream
                     if (optionItem === null || options.length < optionItem.length) optionItem = {row, col, options, len: options.length}
+=======
+                    if (
+                        optionItem === null ||
+                        options.length < optionItem.length
+                    )
+                        optionItem = { row, col, options, len: options.length }
+>>>>>>> Stashed changes
                 }
             }
         }
         return optionItem
     }
 
+<<<<<<< Updated upstream
     solve() {
         while (this.count < 81) {
             __LOOP_PROTECTION__()
@@ -151,12 +198,92 @@ class SudokuSolution {
                         } else {
                             // continue since multiple possible values for cell
                         }
+=======
+    fillAllSingular() {
+        let isDirty = false
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (
+                    matrix[i][j] === 0 &&
+                    this.optionMatrix[i][j] &&
+                    this.optionMatrix[i][j].length === 1
+                ) {
+                    this.fillCell(row, col)
+                    isDirty = true
+                }
+            }
+        }
+        return isDirty
+    }
+
+    updateOptionMatrix() {
+        let k2 = [] // {i, j, b, options}
+        let k3 = []
+        // intersection of row + col + box
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (this.isEmpty(i + 1, j + 1)) {
+                    if (!this.optionMatrix[i][j])
+                        throw Error(
+                            '[updateOptionMatrix]: option matrix is null for unfilled cell'
+                        )
+                    let options = this.getInterSection(
+                        this.optionMatrix,
+                        this.getOptions(i + 1, j + 1)
+                    )
+                    options.sort()
+                    this.optionMatrix[i][j] = options
+                    let b = this.convertToBoxPos(i + 1, j + 1)[0]
+                    if (options.length === 0)
+                        return false // the matrix is invalid
+                    else if (options.length === 2)
+                        k2.push({ i, j, k, key: JSON.stringify(options) })
+                    else if (options.length === 3)
+                        k3.push({ i, j, b, key: JSON.stringify(options) })
+                }
+            }
+        }
+        // duality of cell in row
+        for (let i = 0; i < 9; i++) {
+            let rowFilteredCells = k2.filter((el) => el.i === i)
+            let dict = []
+            for (let el of rowFilteredCells) {
+                dict[el.key].push(el.j)
+            }
+            for (let [key, group] of Object.entries(dict)) {
+                if (group.length > 2) return false // this is invalid occurence hence invalidating the matrix
+                let options = JSON.parse(key)
+                for (let j = 0; j < 9; j++) {
+                    if (!group.includes(j) && this.optionMatrix[i][j]) {
+                        this.optionMatrix[i][j] = this.substractOptions(
+                            this.optionMatrix[i][j],
+                            options
+                        )
                     }
                 }
             }
-            // break if loop executed without filling any cell
-            if (isDirty === false) break
         }
+        for (let j = 0; j < 9; j++) {
+            let colFilteredCells = k2.filter((el) => el.j === j)
+            let dict = colFilteredCells.reduce((res, el) => {
+                res[el.key].push(el.i)
+                return res
+            }, [])
+            for (let [key, group] of Object.entries(dict)) {
+                if (group.length > 2) return false
+                let options = JSON.parse(key)
+                for (let i = 0; i < 9; i++) {
+                    if (!group.includes(i) && this.optionMatrix[i][j]) {
+                        this.optionMatrix[i][j] = this.substractOptions(
+                            this.optionMatrix[i][j],
+                            options
+                        )
+>>>>>>> Stashed changes
+                    }
+                }
+            }
+        }
+<<<<<<< Updated upstream
         if (this.isSolved) return true;
 
         debugger
@@ -164,26 +291,97 @@ class SudokuSolution {
         let optionItem = this.getOptimizedOptionItem()
         if (!optionItem) throw Error('[solve]: getting null option item where matrix is not solved')
         let {row, col, options} = optionItem
+=======
+        for (let b = 0; b < 9; b++) {
+            let boxFilteredCells = k2.filter((el) => el.b === b)
+            let dict = boxFilteredCells.reduce((res, el) => {
+                let { i, j } = el
+                res[el.key].push({ i, j })
+                return res
+            }, [])
+            for (let [key, group] of dict) {
+                if (group.length > 2) return false
+                let options = JSON.parse(key)
+                for (let p = 0; p < 9; p++) {
+                    let [i, j] = this.convertToCellPos(b + 1, p + 1)
+                    if (
+                        !group.find((el) => el.i === i && el.j === j) &&
+                        this.optionMatrix[i][j]
+                    ) {
+                        this.optionMatrix[i][j] = this.substractOptions(
+                            this.optionMatrix[i][j],
+                            options
+                        )
+                    }
+                }
+            }
+        }
+        return true
+    }
+
+    solveUnique() {
+        while (this.count < 81) {
+            __LOOP_PROTECTION__()
+            let flag = this.updateOptionMatrix()
+            if (flag === false) return false
+            let isDirty = this.fillAllSingular()
+            if (!isDirty) break
+        }
+    }
+    solve(tree = 1) {
+        debugger
+        __LOOP_PROTECTION__()
+        // solve all cells which can be uniquely filled
+        let flag = this.solveUnique()
+        if (flag === false) return false
+        if (this.isMatrixComplete()) return true
+
+        //else loop to backtrack
+        console.log(
+            `matrix-count------>${this.count}\trecursive@tree---->${tree}`
+        )
+        let optionItem = this.getOptimizedOptionItem()
+        if (!optionItem)
+            throw Error(
+                '[solve]: getting null option item where matrix is not solved'
+            )
+        let { row, col, options } = optionItem
+>>>>>>> Stashed changes
         let tempSolution = null
         let count = 0 //count of possible solutions for optionItem<option at cell[row][col]>
         let clonedMatrix = this.getClonedMatrix()
         for (let option of options) {
+<<<<<<< Updated upstream
             clonedMatrix[row-1][col-1] = option
             let newSolution = new SudokuSolution(clonedMatrix)
             let flag = newSolution.solve()
+=======
+            clonedMatrix[row - 1][col - 1] = option
+            let newSolution = new SudokuSolution(clonedMatrix)
+            let flag = newSolution.solve(tree + 1)
+>>>>>>> Stashed changes
             if (flag) {
                 if (!tempSolution) tempSolution = newSolution.matrix
                 count++
             }
+<<<<<<< Updated upstream
             clonedMatrix[row-1][col-1] = 0
             if (count > 1) break;
+=======
+            clonedMatrix[row - 1][col - 1] = 0
+            if (count > 1) break
+>>>>>>> Stashed changes
         }
         if (count === 1) {
             // if only 1 solution exist for the item then this is the required solution and return the solution
             this.setMatrix(tempSolution)
             return true
+<<<<<<< Updated upstream
         }
         else {
+=======
+        } else {
+>>>>>>> Stashed changes
             return false
         }
     }
@@ -559,8 +757,13 @@ class Sudoku {
     createRandom() {
         const SOLUTION_MATRIX = this.generateRandomSolutionMatrix()
         const EMPTY_RATIO = 0.1
+<<<<<<< Updated upstream
         const MAX_ATTEMPTS = 100
         let ITERATIONS = 7
+=======
+        const MAX_ATTEMPTS = 10
+        let ITERATIONS = 5
+>>>>>>> Stashed changes
         let partialMatrix = JSON.parse(JSON.stringify(SOLUTION_MATRIX))
 
         while (ITERATIONS--) {
